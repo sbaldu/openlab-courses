@@ -1,6 +1,6 @@
 ---
 marp: true
-theme: default
+theme: gaia
 paginate: true
 math: mathjax
 header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_unibo.png)'
@@ -11,11 +11,80 @@ header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_uni
 section {
   justify-content: flex-start !important;
   padding-top: 0.6rem !important;
+  font-size: 28px;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #1a1a2e;
+}
+
+h1, h2 {
+  color: #1a237e;
 }
 
 h2 {
   margin-top: 0 !important;
   margin-bottom: 0.4em !important;
+}
+
+/* code blocks */
+pre {
+  background: #f0f4f8 !important;
+  background-image: none !important;
+  border: 1px solid #cdd5e0;
+  border-radius: 6px;
+}
+
+pre code {
+  background: #f0f4f8 !important;
+  background-image: none !important;
+  color: #1a1a2e !important;
+}
+
+code {
+  background: #e8edf2 !important;
+  background-image: none !important;
+  color: #1a1a2e !important;
+  border-radius: 3px;
+}
+
+/* highlighted / blockquote blocks */
+blockquote {
+  background: #fff8e1;
+  border-left: 4px solid #f9a825;
+  border-radius: 0 6px 6px 0;
+  padding: 0.4em 0.8em;
+  color: #4a3800;
+}
+
+/* Title slide */
+section.title-slide {
+  background: #0033A0 !important;
+  background-image: none !important;
+  color: white !important;
+  justify-content: center !important;
+  font-size: 42px !important;
+}
+
+section.title-slide h1 {
+  color: white !important;
+  font-size: 1.8em !important;
+}
+
+section.title-slide footer {
+  position: absolute !important;
+  bottom: 1rem !important;
+  right: 1rem !important;
+  left: auto !important;
+  display: flex !important;
+  gap: 1rem;
+  align-items: center;
+  background: transparent;
+}
+
+section.title-slide footer img {
+  height: 1.8cm;
+  width: auto;
+  filter: brightness(0) invert(1);
 }
 
 /* header logos — top-right */
@@ -36,16 +105,17 @@ header img {
 }
 </style>
 
-![height:2cm](images/logo_esc.png)
+<!-- _class: title-slide -->
+<!-- _header: '' -->
+<!-- _footer: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_unibo.png)' -->
+<!-- _paginate: false -->
 
 # Efficient C++ Programming
 
 S. Balducci · F. Giacomini 
-INFN-CNAF | CERN
+UNIBO | INFN-CNAF | CERN
 
-ESC25 — Bertinoro, 29 September – 9 October 2025
-
-![height:0.7cm](images/by-sa.png)
+July 2026
 
 ---
 
@@ -78,18 +148,6 @@ C++ is a complex and large programming language (and library)
 
 ---
 
-## Learn more
-
-- Start from
-  - https://isocpp.org/
-  - https://cppreference.com/
-  - https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines
-- Main C++ conferences
-  - https://github.com/cppcon, https://youtube.com/cppcon
-  - https://github.com/boostcon, https://youtube.com/boostcon
-
----
-
 ## Standards
 
 - A new standard is published every three years.
@@ -101,16 +159,6 @@ C++ is a complex and large programming language (and library)
   - **C++17** https://wg21.link/std17
   - **C++20** https://wg21.link/std20
   - **C++23** https://wg21.link/std23
-
----
-
-## Compilers
-
-- The ESC machines provide at least two C++ compilers: use gcc 14.2.1 (see instructions on how to enable it), but the default gcc 11.5 is also available
-- Additionally, you can edit and try your code online with multiple compilers at
-  - https://godbolt.org/
-  - https://coliru.stacked-crooked.com/
-  - https://wandbox.org/
 
 ---
 
@@ -1502,73 +1550,3 @@ lo....                         // use the object
 - If (N)RVO is not applied, a move is done, if available
 - If the move is not available, copy
 
----
-
-## Return value optimization
-
-**Unnamed**
-
-```cpp
-Widget make_widget()
-{
-  if (...) {
-    return Widget{};
-  }
-  return Widget{};
-}
-
-auto w = make_widget();
-```
-
-**Named**
-
-```cpp
-Widget make_widget()
-{
-  Widget result;
-  if (...) {
-    result = Widget{};
-  }
-  return result;
-}
-
-auto w = make_widget();
-```
-
-- Try not to mix named and unnamed `return`s in the same function
-- Avoid `return std::move(result)`, unless necessary
-
----
-
-## Hands-on
-
-- C++ → Return Value Optimization
-- Open the program `rvo.cpp`. Implement variations of the `make_vector` function so that:
-  - the result is returned from the function
-  - the result is passed to the function as an output parameter (by reference or by pointer)
-
-- Measure the time it takes to execute them. Discuss the results.
-
----
-
-## Bonus: Iterator traits
-
-`std::iterator_traits` is a class template that provides properties about an iterator in terms of member types
-
-- `difference_type` is a signed integer to identify the distance between iterators
-- `value_type` is the type obtained dereferencing an iterator
-- `pointer` is the type of pointer to `value_type`
-- `reference` is the type of reference to `value_type`
-- `iterator_category` is one of input, output, forward, bidirectional, random-access
-
-```cpp
-template<typename T>
-struct iterator_traits<T*> // specialization for a pointer
-{
-  typedef random_access_iterator_tag iterator_category;
-  typedef T                          value_type;
-  typedef ptrdiff_t                  difference_type;
-  typedef T*                         pointer;
-  typedef T&                         reference;
-};
-```
