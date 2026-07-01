@@ -1,3 +1,3 @@
 
 all:
-	nvcc kernel.cu -o kernel.out
+	nvcc kernel.cu -I../../utils -o kernel.out

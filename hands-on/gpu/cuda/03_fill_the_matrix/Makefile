@@ -1,3 +1,3 @@
 
 all:
-	nvcc matrix.cu -o matrix.out
+	nvcc matrix.cu -I../../utils -o matrix.out

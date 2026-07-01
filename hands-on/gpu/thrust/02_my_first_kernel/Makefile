@@ -1,3 +1,3 @@
 
 all:
-	nvcc -std=c++20 --extended-lambda kernel.cu -o kernel.out
+	nvcc -std=c++20 -I../../utils --extended-lambda kernel.cu -o kernel.out
