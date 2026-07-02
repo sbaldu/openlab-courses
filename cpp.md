@@ -113,7 +113,7 @@ header img {
 
 # Efficient C++ Programming
 
-S. Balducci · F. Giacomini 
+**S. Balducci** · F. Giacomini 
 UNIBO | INFN-CNAF | CERN
 
 July 2026
@@ -792,6 +792,28 @@ i.e. 14 ns just to allocate/deallocate an `int`
 
 ---
 
+## Iterators
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:1.8;min-width:0">
+
+- Iterators are a generalization of pointers to iterate over the elements of a container
+- They can be dereferenced like pointers
+- They provide operators for moving along the container
+    - `operator++`, `operator--`, `operator+=`, `operator-=`, `operator[]`, ...
+- Iterators are divided into different categories
+- Different categories provides a different range of operators and map different types of containers
+
+</div>
+<div style="flex:1;min-width:0">
+
+![w:300px](images/iterators.png)
+
+</div>
+</div>
+
+---
+
 ## Range
 
 - A range is defined by a pair of **iterators** [*first*, *last*), with *last* referring to one past the last element in the range
@@ -985,8 +1007,7 @@ bool less(int n, int m) { return n < m; }
 
 ```cpp
 template <class Iterator, class T>
-Iterator find(Iterator first, Iterator last, const T& value)
-{
+Iterator find(Iterator first, Iterator last, const T& value) {
   for (; first != last; ++first)
     if (*first == value)
       break;
@@ -995,11 +1016,11 @@ Iterator find(Iterator first, Iterator last, const T& value)
 
 auto it = find(v.begin(), v.end(), 42);
 ```
+Some algorithms are customizable passing a function
 
 ```cpp
 template <class Iterator, class Predicate>
-Iterator find_if(Iterator first, Iterator last, Predicate pred)
-{
+Iterator find_if(Iterator first, Iterator last, Predicate pred) {
   for (; first != last; ++first)
     if (pred(*first))         // unary predicate
       break;
@@ -1011,8 +1032,6 @@ bool lt42(int n) { return n < 42; }
 auto it = find_if(v.begin(), v.end(), lt42);
 auto it = find_if(v.begin(), v.end(), [](int n) { return n < 42; } );
 ```
-
-Some algorithms are customizable passing a function
 
 ---
 
@@ -1117,26 +1136,28 @@ Print a few numbers and check that they correspond to what is produced by `std::
 - Useful to pass actions/callbacks to algorithms, threads, frameworks, ...
 
 ```cpp
-struct LessThan42 {           std::find_if(..., LessThan42{});
-  auto operator()(int n)
-  {                           std::find_if(..., [](int n) {
-    return n < 42;                              return n < 42;
-  }                                           }
-};                            );
+struct LessThan42 {           
+  auto operator()(int n) {                           
+    return n < 42;            
+  }                           
+};                            
+
+std::find_if(..., LessThan42{});
+std::find_if(..., [](int n) { return n < 42; });
 
 class LessThan {
-  int m_;                     std::find_if(..., LessThan{m});
+  int m_;                     
  public:
-  explicit LessThan(int m)    auto m = ...;
-    : m_{m} {}                std::find_if(..., [=](int n) {
-  auto operator()(int n) const              return n < m;
-  {                                       }
-    return n < m_;            );
+  explicit LessThan(int m) : m_{m} {}                
+  auto operator()(int n) const {                           
+    return n < m_;            
   }
-};                            std::find_if(..., [m = ...](int n) {
-                                              return n < m;
-                                            }
-                              );
+};                            
+                              
+auto m = ...;
+std::find_if(..., LessThan{m});
+std::find_if(..., [=](int n) { return n < m; });
+std::find_if(..., [m = ...](int n) { return n < m; });                                   
 ```
 
 ---
@@ -1302,6 +1323,28 @@ assert(v == 4);
   - find the first multiple of 3 or 7
   - erase from the vector all the multiples of 3 or 7
   - ...
+
+---
+
+## Views and Range Adaptors
+
+- Views are *lazily evaluated*, *non-owning* ranges
+    - i.e. they generate lightweight ranges that do not store data on global memory
+- The values are computed on-the-fly when iterating over the view
+
+```cpp
+for (auto x : std::views::iota(0, N))
+    std::cout << x << ' ';      // prints 0, 1, 2, ..., N-1
+
+```
+- Views can be chained with `operator|`
+```cpp
+for (auto x : std::views::iota(0, N) | 
+              std::views::filter([](int i) { return i % 2 == 0; }) | 
+              std::views::transform([](int i) { return i * i; }))
+    std::cout << x << ' ';      // prints 0, 4, 16, ..., (N-1)^2 for even numbers only
+
+```
 
 ---
 
