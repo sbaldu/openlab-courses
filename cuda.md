@@ -4,6 +4,7 @@ theme: gaia
 paginate: true
 math: mathjax
 header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_unibo.png)'
+footer: 'Simone Balducci · Introduction to Parallel Computing and GPU programming with CUDA'
 ---
 
 <style>
@@ -11,7 +12,7 @@ header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_uni
 section {
   justify-content: flex-start !important;
   padding-top: 0.6rem !important;
-  font-size: 28px;
+  font-size: 24px;
   background: #ffffff !important;
   background-image: none !important;
   color: #1a1a2e;
@@ -75,7 +76,9 @@ section.title-slide footer {
   bottom: 1rem !important;
   right: 1rem !important;
   left: auto !important;
+  width: auto !important;
   display: flex !important;
+  justify-content: flex-end;
   gap: 1rem;
   align-items: center;
   background: transparent;
@@ -103,6 +106,14 @@ header img {
   height: 0.8cm;
   width: auto;
 }
+
+/* footer text — centered */
+footer {
+  left: 0;
+  right: 0;
+  width: 100%;
+  text-align: center;
+}
 </style>
 
 <!-- _class: title-slide -->
@@ -127,7 +138,6 @@ CERN Experimental Physics Department
 - Device Management
 - Thrust library
 - CUB library
-- CuPy
 
 ---
 
@@ -137,15 +147,6 @@ CERN Experimental Physics Department
 - Manage GPU memory
 - Manage communication and synchronization
 - From C++ standard algorithms to GPU execution using thrust
-
----
-
-## Past systems
-
-- Computing landscape is very different from 10-20 years ago
-- Every component and its interfaces are being re-examined
-
-<!-- image placeholder: Microprocessor, Main Memory, Storage (SSD/HDD) -->
 
 ---
 
@@ -186,35 +187,51 @@ AMD and NVIDIA main manufacturers for discrete GPUs, Intel for integrated ones
 
 ## CPU vs GPU architectures
 
-<!-- image placeholder: CPU architecture diagram (Control, ALU/Cache, Cache, DRAM) and GPU architecture diagram (many cores, DRAM), with CPU and GPU photos -->
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:500px](images/cpu-architecture.png)
+
+</div>
+<div style="flex:1.8;min-width:0">
+
+![w:500px](images/gpu-architecture.png)
+
+</div>
+</div>
 
 ---
 
-## CPU vs GPU architectures
+## **CPU** vs GPU architectures
 
-<!-- image placeholder: CPU architecture diagram (Control, ALU/Cache, Cache, DRAM) -->
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:400px](images/cpu-architecture.png)
+
+</div>
+<div style="flex:3.0;min-width:0">
 
 - Large caches (slow memory accesses to quick cache accesses)
-
 - SIMD
-
 - Branch prediction/speculative
-
 - Powerful ALU
-
 - Pipelining
 
----
-
-## Memory access patterns: cached
-
-For optimal CPU cache utilization, the thread *a* should process element *i* and *i+1*
-
-<!-- image placeholder: CPU architecture diagram with CPU Thread 0, CPU Thread 1, CPU Thread 2, CPU Thread 3 accessing array elements -->
+</div>
+</div>
 
 ---
 
-## CPU vs GPU architectures
+## CPU vs **GPU** architectures
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:400px](images/gpu-architecture.png)
+
+</div>
+<div style="flex:3.0;min-width:0">
 
 - Hundreds of "cores" (e.g. streaming multiprocessors, Xe cores, compute units)
 - SIMT (Single-Instruction, Multiple-Thread) with hundreds of SIMD-like warps in fly
@@ -223,7 +240,18 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 - Instructions issued in order
 - Branch predication
 
+</div>
+</div>
+
 <!-- image placeholder: GPU architecture diagram (many cores, DRAM) and GPU photo -->
+
+---
+
+## Memory access patterns: cached
+
+For optimal CPU cache utilization, the thread *a* should process element *i* and *i+1*
+
+<!-- image placeholder: CPU architecture diagram with CPU Thread 0, CPU Thread 1, CPU Thread 2, CPU Thread 3 accessing array elements -->
 
 ---
 
@@ -242,6 +270,14 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 
 ## Warps
 
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:280px](images/warps.png)
+
+</div>
+<div style="flex:5.0;min-width:0">
+
 - Once a block is assigned to an SM, it is divided into units called warps.
 - Thread IDs within a warp are consecutive and increasing
 - Threads within a warp are executed in a SIMD fashion
@@ -249,6 +285,9 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 - Context switch between warps when stalled
 - Context switch must be very fast
 - Typical values of warp size 16, 32, 64 depending on vendor
+
+</div>
+</div>
 
 <!-- image placeholder: warp execution diagram showing active/stalled warps -->
 
@@ -337,6 +376,9 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 
 ## Memory Hierarchy in GPU programming
 
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
 - Registers/Shared memory:
   - Fast
   - Only accessible by the thread/block
@@ -346,30 +388,15 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
   - Accessible from either the host or device
   - Lifetime of the application
 
+</div>
+<div style="flex:2.0;min-width:0">
+
+![w:500px](images/memory-hierarchy.png)
+
+</div>
+</div>
+
 <!-- image placeholder: Thread → per-thread local memory, Thread Block → per-block shared memory, Grid → Global memory hierarchy diagram -->
-
----
-
-## Hello World!
-
-```cpp
-#include <iostream>
-
-int main() {
-    std::cout << "Hello World!\n";
-}
-```
-
-Standard C++ that runs on the host
-nvcc can be used to compile programs with no *device* code
-
-```
-Output:
-$ nvcc hello_world.cu
-$ ./a.out
-Hello World!
-$
-```
 
 ---
 
@@ -531,10 +558,10 @@ A stream is a queue of operations to be executed on the device
 
 | | |
 |---|---|
-| **`cudaMemcpy()`, `cudaMalloc()`** | Blocks the CPU thread until the copy/allocation is complete. Copy/allocation begins when all preceding CUDA calls have completed |
-| **`cudaMemcpyAsync()`, `cudaMallocAsync()`** | Asynchronous, does not block the CPU thread |
-| **`cudaDeviceSynchronize()`** | Blocks the CPU thread until all preceding CUDA calls have completed |
-| **`cudaStreamSynchronize(stream)`** | Blocks the CPU thread until all preceding CUDA calls in the stream have completed |
+| **`cudaMemcpy`, `cudaMalloc`** | Blocks the CPU thread until the copy/allocation is complete. Copy/allocation begins when all preceding CUDA calls have completed |
+| **`cudaMemcpyAsync`, `cudaMallocAsync`** | Asynchronous, does not block the CPU thread |
+| **`cudaDeviceSynchronize`** | Blocks the CPU thread until all preceding CUDA calls have completed |
+| **`cudaStreamSynchronize`** | Blocks the CPU thread until all preceding CUDA calls in the stream have completed |
 
 ---
 
@@ -760,8 +787,7 @@ https://infn-esc.github.io/esc25/gpu/cuda.html
 
 <!-- _header: '' -->
 
-## Shared Memory
-## with CUDA
+## Shared Memory with CUDA
 
 ---
 
@@ -890,7 +916,7 @@ __global__ void stencil_1d(const int *in, int *out, int n) {
 
         // Apply the stencil
         int result = 0;
-        for (int offset = -RADIUS ; offset <= RADIUS ; offset++)
+        for (auto offset = -RADIUS ; offset <= RADIUS ; ++offset)
             result += temp[s_index + offset];
 
         // Store the result
@@ -898,8 +924,6 @@ __global__ void stencil_1d(const int *in, int *out, int n) {
     }
 }
 ```
-
-<!-- image placeholder: shared memory block cube diagrams with __syncthreads() barrier highlighted -->
 
 ---
 
@@ -938,8 +962,7 @@ Use `__shared__` to declare a variable/array in shared memory
 
 <!-- _header: '' -->
 
-## The thrust/roc-thrust
-## libraries
+## The thrust/roc-thrust libraries
 
 ---
 
@@ -1317,9 +1340,8 @@ cudaFreeHost(area);
 - Using multiple streams allows to execute concurrently pieces of code that are independent
 - This allows to maximize the use of the machine
 
+![w:800px](images/streams.png)
 <!-- image placeholder: concurrency diagram showing CPU (async copy, launch, wait, write, wait), GPU compute stream, copy stream (copy D2H), and buffer -->
-
-\* NVIDIA DLI
 
 ---
 
@@ -1381,18 +1403,23 @@ for (auto& s: streams) {
 - Thrust algorithms internally call another layer of the CUDA Core libraries, CUB
 - The calls to the Thrust algorithms are synchronized, whereas CUB algorithms are not
 
+<div style="text-align:center">
+
+![w:650px](images/cub-1.png)
 <!-- image placeholder: diagram showing thrust::tabulate containing cub::DeviceTransform (launch) and cudaDeviceSynchronize() (wait), with GPU compute timeline below -->
 
-- NOTE: There is also `thrust::async` for simple applications
+</div>
 
-\* NVIDIA DLI
+- NOTE: There is also `thrust::async` for simple applications
 
 ---
 
 ## CUB cooperative algorithms
 
-- CUB also provides many cooperative algorithms
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:5.3;min-width:0">
 
+- CUB also provides many cooperative algorithms
 - Algorithms are divided into:
   - **serial**
     - invoked by one thread, executed by one
@@ -1401,9 +1428,13 @@ for (auto& s: streams) {
   - **cooperative**
     - invoked by many threads, executed by many
 
-<!-- image placeholder: parallel sort diagram showing serial sort steps → cooperative sort combining results -->
+</div>
+<div style="flex:2.3;min-width:0">
 
-\* NVIDIA DLI
+![w:310px](images/cub-2.png)
+
+</div>
+</div>
 
 ---
 
@@ -1442,6 +1473,9 @@ __global__ void Kernel(const int* data, int* block_sums, int N) {
 
 ## Performance portability
 
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:4.3;min-width:0">
+
 - Started effort to make CMS online and offline event reconstruction heterogeneous in 2016
 
 - Ability to write code that can target different hardware (NVIDIA, AMD, Intel GPUs, CPUs).
@@ -1451,6 +1485,15 @@ __global__ void Kernel(const int* data, int* block_sums, int N) {
 - Fortunately GPUs all work in very similar ways and once you learn one programming model and know how/if to map logical names to the hardware you can program any GPU
   - https://github.com/CHIP-SPV/chipStar
   - https://github.com/ROCm/HIPIFY
+
+</div>
+<div style="flex:1.5;min-width:0">
+
+![w:300px](images/alpaka.png)
+![w:300px](images/standards.png)
+
+</div>
+</div>
 
 <!-- image placeholder: alpaca image with GPU vendor logos, "HOW STANDARDS PROLIFERATE" comic -->
 
