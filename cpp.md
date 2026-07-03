@@ -5,6 +5,7 @@ paginate: true
 math: mathjax
 html: true
 header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_unibo.png)'
+footer: 'Simone Balducci · Efficient C++ Programming'
 ---
 
 <style>
@@ -76,7 +77,9 @@ section.title-slide footer {
   bottom: 1rem !important;
   right: 1rem !important;
   left: auto !important;
+  width: auto !important;
   display: flex !important;
+  justify-content: flex-end;
   gap: 1rem;
   align-items: center;
   background: transparent;
@@ -103,6 +106,14 @@ header {
 header img {
   height: 0.8cm;
   width: auto;
+}
+
+/* footer text — centered */
+footer {
+  left: 0;
+  right: 0;
+  width: 100%;
+  text-align: center;
 }
 </style>
 
