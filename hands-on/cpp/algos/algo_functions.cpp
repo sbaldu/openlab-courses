@@ -1,15 +1,14 @@
-#include <random>
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <numeric>
+#include <random>
+#include <vector>
 
-std::ostream& operator<<(std::ostream& os, std::vector<int> const& c);
+std::ostream &operator<<(std::ostream &os, std::vector<int> const &c);
 std::vector<int> make_vector(int N);
 
-int main()
-{
+int main() {
   // create a vector of N elements, generated randomly
   int const N = 10;
   std::vector<int> v = make_vector(N);
@@ -19,7 +18,8 @@ int main()
   // use std::accumulate
 
   // compute the mean and the standard deviation
-  // use std::accumulate and a struct with two numbers to accumulate both the sum and the sum of squares
+  // use std::accumulate and a struct with two numbers to accumulate both the
+  // sum and the sum of squares
 
   // sort the vector in descending order
   // use std::sort
@@ -38,21 +38,15 @@ int main()
   //   or the newer std::erase_if utility (C++20)
 }
 
-std::ostream& operator<<(std::ostream& os, std::vector<int> const& c)
-{
+std::ostream &operator<<(std::ostream &os, std::vector<int> const &c) {
   os << "{ ";
-  std::copy(
-            std::begin(c),
-            std::end(c),
-            std::ostream_iterator<int>{os, " "}
-            );
+  std::copy(std::begin(c), std::end(c), std::ostream_iterator<int>{os, " "});
   os << '}';
 
   return os;
 }
 
-std::vector<int> make_vector(int N)
-{
+std::vector<int> make_vector(int N) {
   // define a pseudo-random number generator engine and seed it using an actual
   // random device
   std::random_device rd;

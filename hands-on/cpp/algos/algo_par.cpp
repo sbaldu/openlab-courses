@@ -1,18 +1,17 @@
-#include <random>
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <cassert>
+#include <chrono>
+#include <execution>
+#include <iostream>
 #include <iterator>
 #include <numeric>
-#include <execution>
-#include <chrono>
-#include <cassert>
+#include <random>
+#include <vector>
 
 using Clock = std::chrono::steady_clock;
 using Duration = std::chrono::duration<float>;
 
-int main()
-{
+int main() {
   // define a pseudo-random number generator engine and seed it using an actual
   // random device
   std::random_device rd;
@@ -25,7 +24,8 @@ int main()
   int const SIZE = 10'000'000;
   std::vector<int> v;
   v.reserve(SIZE);
-  std::generate_n(std::back_inserter(v), SIZE, [&] { return uniform_dist(eng); });
+  std::generate_n(std::back_inserter(v), SIZE,
+                  [&] { return uniform_dist(eng); });
 
   {
     auto t0 = Clock::now();

@@ -1,13 +1,11 @@
 #include <iostream>
 #include <random>
 
-class LinearCongruential
-{
+class LinearCongruential {
   // ...
 };
 
-int main()
-{
+int main() {
   LinearCongruential eng;
   std::default_random_engine stdeng;
   std::cout << eng() << '\t' << stdeng() << '\n';

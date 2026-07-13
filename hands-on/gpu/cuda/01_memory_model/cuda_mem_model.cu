@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Exercise 1 – CUDA Memory Model 
+// Exercise 1 – CUDA Memory Model
 //
 // Fill in every line marked  ►►► TODO ◄◄◄.
 // When you can build and run the program without assertions, you’re done.
@@ -21,15 +21,14 @@
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
-constexpr int  kDeviceId     = 0;     // Change if you were assigned a different GPU
-constexpr int  kNumElements  = 8;     // Array length
-using ValueT                 = float;
+constexpr int kDeviceId = 0;    // Change if you were assigned a different GPU
+constexpr int kNumElements = 8; // Array length
+using ValueT = float;
 
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-int main()
-{
+int main() {
   // 1. Select device and create a stream
   CUDA_CHECK(cudaSetDevice(kDeviceId));
   cudaStream_t stream;
@@ -37,7 +36,9 @@ int main()
 
   // 2. Host data – h_a = {0, 1, 2, …}
   std::vector<ValueT> h_a(kNumElements);
-  for (int i = 0; i < kNumElements; ++i) { h_a[i] = static_cast<ValueT>(i); }
+  for (int i = 0; i < kNumElements; ++i) {
+    h_a[i] = static_cast<ValueT>(i);
+  }
 
   // 3. Device buffers
   ValueT *d_a = nullptr;
@@ -70,7 +71,9 @@ int main()
   CUDA_CHECK(cudaStreamSynchronize(stream));
 
   // Verify result
-  for (int i = 0; i < kNumElements; ++i) { assert(h_a[i] == static_cast<ValueT>(i)); }
+  for (int i = 0; i < kNumElements; ++i) {
+    assert(h_a[i] == static_cast<ValueT>(i));
+  }
 
   CUDA_CHECK(cudaStreamDestroy(stream));
   std::cout << "Exercise 1 – memory model: PASSED 🎉" << std::endl;

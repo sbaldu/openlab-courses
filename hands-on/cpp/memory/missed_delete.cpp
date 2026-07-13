@@ -1,11 +1,10 @@
 
 using SomeType = int;
 
-SomeType* factory();
-void do_something(SomeType*);
+SomeType *factory();
+void do_something(SomeType *);
 
-int main()
-{
+int main() {
   auto t = factory();
 
   // try {
@@ -18,12 +17,6 @@ int main()
   // }
 }
 
-SomeType* factory()
-{
-  return new SomeType{};
-}
+SomeType *factory() { return new SomeType{}; }
 
-void do_something(SomeType*)
-{
-  throw 1;
-}
+void do_something(SomeType *) { throw 1; }

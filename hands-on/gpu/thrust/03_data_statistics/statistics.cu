@@ -27,12 +27,14 @@ int main() {
   auto mean = ...;
   std::cout << "The mean is equal to " << mean << std::endl;
 
-  // Part 4: Create an intermediary buffer and fill it with the squared differences between the data values and the mean
+  // Part 4: Create an intermediary buffer and fill it with the squared
+  // differences between the data values and the mean
   auto squared_differences = ...;
 
   // Part 5: Compute the standard deviation
-  auto std =  ...;
+  auto std = ...;
   std::cout << "The standard deviation is equal to " << std << std::endl;
-  
-  // Part 6: Go back to steps 4 and 5, try to compute the standard deviation without the intermediary buffer
+
+  // Part 6: Go back to steps 4 and 5, try to compute the standard deviation
+  // without the intermediary buffer
 }

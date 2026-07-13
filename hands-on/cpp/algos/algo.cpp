@@ -1,15 +1,14 @@
-#include <random>
-#include <vector>
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include <iterator>
 #include <numeric>
+#include <random>
+#include <vector>
 
-std::ostream& operator<<(std::ostream& os, std::vector<int> const& c);
+std::ostream &operator<<(std::ostream &os, std::vector<int> const &c);
 std::vector<int> make_vector(int N);
 
-int main()
-{
+int main() {
   // create a vector of N elements, generated randomly
   int const N = 10;
   std::vector<int> v = make_vector(N);
@@ -27,21 +26,15 @@ int main()
   // use std::rotate
 }
 
-std::ostream& operator<<(std::ostream& os, std::vector<int> const& c)
-{
+std::ostream &operator<<(std::ostream &os, std::vector<int> const &c) {
   os << "{ ";
-  std::copy(
-            std::begin(c),
-            std::end(c),
-            std::ostream_iterator<int>{os, " "}
-            );
+  std::copy(std::begin(c), std::end(c), std::ostream_iterator<int>{os, " "});
   os << '}';
 
   return os;
 }
 
-std::vector<int> make_vector(int N)
-{
+std::vector<int> make_vector(int N) {
   std::random_device rd;
   std::default_random_engine eng{rd()};
 

@@ -1,16 +1,12 @@
 
-int* factory();
+int *factory();
 
 // "still reachable"
 auto g = factory();
 
-int main()
-{
+int main() {
   // "definitely lost"
   auto t = factory();
 }
 
-int* factory()
-{
-  return new int;
-}
+int *factory() { return new int; }

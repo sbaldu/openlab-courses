@@ -39,34 +39,30 @@
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
-constexpr int kDeviceId = 0;   // Change if you were assigned a different GPU
+constexpr int kDeviceId = 0; // Change if you were assigned a different GPU
 
 // ---------------------------------------------------------------------------
 // Kernel
 // ---------------------------------------------------------------------------
-__global__ void fillMatrixKernel(int* __restrict__ mat,
-                                 int   numCols,
-                                 int   numRows)
-{
+__global__ void fillMatrixKernel(int *__restrict__ mat, int numCols,
+                                 int numRows) {
   // 1. Identify my (row, col) inside the 2‑D matrix
   const int col = blockIdx.x * blockDim.x + threadIdx.x;
   const int row = blockIdx.y * blockDim.y + threadIdx.y;
-
 }
 
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-int main()
-{
+int main() {
   CUDA_CHECK(cudaSetDevice(kDeviceId));
   cudaStream_t stream;
   CUDA_CHECK(cudaStreamCreate(&stream));
 
   // ───►►► Part 1 of 4 – set matrix dims ◄◄◄─────────────────────────────────
   // Choose any positive sizes (e.g. 4×4 or 19×67) so long as both ≥ 1.
-  const int numCols = /* TODO: set X dimension */;  // aka width
-  const int numRows = /* TODO: set Y dimension */;  // aka height
+  const int numCols = /* TODO: set X dimension */; // aka width
+  const int numRows = /* TODO: set Y dimension */; // aka height
 
   // Host allocation
   const int elements = numCols * numRows;
@@ -74,25 +70,24 @@ int main()
   const std::size_t bytes = elements * sizeof(int);
 
   // Device allocation
-  int* d_mat = nullptr;
+  int *d_mat = nullptr;
   // API: cudaMallocAsync(void** ptr, size_t size, cudaStream_t s)
-  CUDA_CHECK(cudaMallocAsync(reinterpret_cast<void**>(&d_mat), bytes, stream));
+  CUDA_CHECK(cudaMallocAsync(reinterpret_cast<void **>(&d_mat), bytes, stream));
 
   // ───►►► Part 2 of 4 – configure grid & block, launch kernel ◄◄◄──────────
-  const dim3 threadsPerBlock(16, 16);  // fine for small matrices
+  const dim3 threadsPerBlock(16, 16); // fine for small matrices
   const dim3 blocksPerGrid(
       (numCols + threadsPerBlock.x - 1) / threadsPerBlock.x,
       (numRows + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
   // Kernel launch
-  fillMatrixKernel<<<blocksPerGrid, threadsPerBlock, 0, stream>>>(d_mat,
-                                                                  numCols,
-                                                                  numRows);
-  CUDA_CHECK(cudaGetLastError());  // check launch
+  fillMatrixKernel<<<blocksPerGrid, threadsPerBlock, 0, stream>>>(
+      d_mat, numCols, numRows);
+  CUDA_CHECK(cudaGetLastError()); // check launch
 
   // Device → host copy
-  CUDA_CHECK(cudaMemcpyAsync(h_mat.data(), d_mat, bytes,
-                             cudaMemcpyDeviceToHost, stream));
+  CUDA_CHECK(cudaMemcpyAsync(h_mat.data(), d_mat, bytes, cudaMemcpyDeviceToHost,
+                             stream));
 
   // Free device memory (async)
   CUDA_CHECK(cudaFreeAsync(d_mat, stream));

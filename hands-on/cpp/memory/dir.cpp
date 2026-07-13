@@ -1,26 +1,20 @@
-#include <string>
-#include <vector>
-#include <memory>
+#include <dirent.h>
 #include <iostream>
 #include <iterator>
-#include <dirent.h>
+#include <memory>
+#include <string>
+#include <vector>
 
-template<typename T>
-std::ostream& operator<<(std::ostream& os, std::vector<T> const& c)
-{
+template <typename T>
+std::ostream &operator<<(std::ostream &os, std::vector<T> const &c) {
   os << "{ ";
-  std::copy(
-      std::begin(c),
-      std::end(c),
-      std::ostream_iterator<T>{os, " "}
-  );
+  std::copy(std::begin(c), std::end(c), std::ostream_iterator<T>{os, " "});
   os << '}';
 
   return os;
 }
 
-std::vector<std::string> entries(/* add the right parameters here */)
-{
+std::vector<std::string> entries(/* add the right parameters here */) {
   std::vector<std::string> result;
 
   // relevant function and data structure are:
@@ -40,8 +34,7 @@ std::vector<std::string> entries(/* add the right parameters here */)
   return result;
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
   std::string const name = argc > 1 ? argv[1] : ".";
 
   // create a smart pointer to a DIR here, with a deleter

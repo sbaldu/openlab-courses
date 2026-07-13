@@ -26,8 +26,8 @@ int main() {
 
   // Pointer and dimension for host memory
   int dim = 1024;
-  // Part 1 of 6: allocate a buffer in host memory with increasing values from 0 to
-  // dimA - 1
+  // Part 1 of 6: allocate a buffer in host memory with increasing values from 0
+  // to dimA - 1
   auto h_buffer = ...;
 
   // Part 2 of 6: allocate two buffers in device memory
@@ -37,8 +37,8 @@ int main() {
   // BONUS: use at least two different methods for copying the data
   // Part 3 of 6: copy the content of the host buffer to the first device buffer
 
-  // Part 4 of 6: copy the content of the first device buffer to the second device
-  // buffer
+  // Part 4 of 6: copy the content of the first device buffer to the second
+  // device buffer
 
   // Part 5 of 6: set all the values in the host buffer to zero
 

@@ -24,15 +24,14 @@
 // ---------------------------------------------------------------------------
 // Configuration
 // ---------------------------------------------------------------------------
-constexpr int kDeviceId       = 0;    // Change if you were assigned a different GPU
-constexpr int kNumElements    = 64;   // Must be divisible by kBlockSize
-constexpr int kBlockSize      = 8;    // Threads per block
+constexpr int kDeviceId = 0;     // Change if you were assigned a different GPU
+constexpr int kNumElements = 64; // Must be divisible by kBlockSize
+constexpr int kBlockSize = 8;    // Threads per block
 
 // ---------------------------------------------------------------------------
 // Kernel – each thread sets d_data[idx] = idx + 42
 // ---------------------------------------------------------------------------
-__global__ void initArrayKernel(/* TODO: add parameters */)
-{
+__global__ void initArrayKernel(/* TODO: add parameters */) {
   // TODO: compute global thread index
   // TODO: guard against out-of-range accesses
   // TODO: write the value to global memory
@@ -41,8 +40,7 @@ __global__ void initArrayKernel(/* TODO: add parameters */)
 // ---------------------------------------------------------------------------
 // main
 // ---------------------------------------------------------------------------
-int main()
-{
+int main() {
   // Select device and create a stream
   CUDA_CHECK(cudaSetDevice(kDeviceId));
   cudaStream_t stream;
@@ -52,7 +50,7 @@ int main()
   std::vector<int> h_a(kNumElements, 0);
 
   // Device buffer
-  int* d_a = nullptr;
+  int *d_a = nullptr;
   const std::size_t bytes = kNumElements * sizeof(int);
 
   // ───►►► Part 1 of 5 – allocate device memory ◄◄◄──────────────────────────
@@ -78,7 +76,9 @@ int main()
   CUDA_CHECK(cudaStreamSynchronize(stream));
 
   // Verify result
-  for (int i = 0; i < kNumElements; ++i) { assert(h_a[i] == i + 42); }
+  for (int i = 0; i < kNumElements; ++i) {
+    assert(h_a[i] == i + 42);
+  }
 
   CUDA_CHECK(cudaStreamDestroy(stream));
   std::cout << "Exercise 2 – kernel launch: PASSED 🎉" << std::endl;
