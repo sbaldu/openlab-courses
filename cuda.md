@@ -57,6 +57,15 @@ blockquote {
   color: #4a3800;
 }
 
+/* Section title slides (title-only slides that introduce a new section) */
+section.section-title {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
 /* Title slide */
 section.title-slide {
   background: #0033A0 !important;
@@ -123,7 +132,7 @@ footer {
 
 # Introduction to Parallel Computing and GPU programming with CUDA
 
-Simone Balducci, **Felice Pantaleo,** Aurora Perego
+**Simone Balducci**, Felice Pantaleo, Aurora Perego
 CERN Experimental Physics Department
 
 ---
@@ -158,6 +167,303 @@ CERN Experimental Physics Department
   - Five walls: Energy, reliability, complexity, security, scalability
 
 <!-- image placeholder: FPGA, Heterogeneous Processors and Accelerators, Hybrid Memory, GPU, Persistent memory/Storage -->
+
+---
+
+## Previously, in Moore's paradise 
+
+<div style="text-align:center">
+
+![w:800px](images/moore.png)
+
+</div>
+
+- The main contribution to the gain in microprocessor performance at
+this stage came by increasing the clock frequency.
+- Applications’ performance doubled every 18 months without having
+to redesign the software or changing the source code
+
+---
+
+## Moore's law
+
+<div style="text-align:center">
+
+![w:800px](images/previous-moore.png)
+
+</div>
+
+---
+
+## Moore's law
+
+<div style="position:relative; text-align:center">
+
+![w:800px](images/previous-moore.png)
+
+<img src="images/unicorn.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:600px;">
+
+</div>
+
+---
+
+## Moore's law
+
+<div style="text-align:center">
+
+![w:900px](images/modern-moore.png)
+
+</div>
+
+---
+
+## Reduce
+
+Reduction is a very common pattern in parallel computing:
+- Large input data structure distributed across many PU
+- Each PU computes a tally of its input
+- These tally values are combined to produce the final result
+
+Examples:
+- The sum of the elements of an array
+- The maximum/minimum element of an array
+- Find the first occurrence of x in an array
+
+---
+
+## Count number of 5s
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+```
+array[N]
+numberOf5 = 0
+for i in [0, N]: 
+    if array[i] == 5:
+        numberOf5 += 1
+return numberOf5
+```
+</div>
+<div style="flex:2.0;min-width:0">
+
+```
+array[N]
+numberOf5 = 0
+nWorkers = 4
+count5(array, workerId):
+    beg = workerId * N/nWorkers
+    end = (workerId + 1) * N/nWorkers
+    for i in [beg, end]: 
+        if array[i] == 5:
+            numberOf5 += 1
+return numberOf5
+```
+
+</div>
+</div>
+
+---
+
+## Data races
+
+Threads within a process share the same address space but not their execution stack
+- Pro: Threads can communicate using shared memory
+- Cons: Data Races if threads are not synchronized
+
+Data races usually occur when threads modify data in different points in the instruction pipeline and the order of reading and writing operation matters (data dependence)
+
+---
+
+## Data races
+
+- Overlooking data races can lead to the corruption of the shared state (race condition)
+- Tricky to debug since the result depends on the timing between concurrent threads: unpredictable!
+- When a piece of code is clean of data races, it is said to be thread-safe.
+- The easiest ways to avoid conflicts in critical sections is to grant access one thread at a time: **mutex** (mutual exclusion)
+
+<div style="text-align:center">
+
+![w:500px](images/race.png)
+
+</div>
+
+---
+
+## Count number of 5s
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+```
+array[N]
+numberOf5 = 0
+for i in [0, N]: 
+    if array[i] == 5:
+        numberOf5 += 1
+return numberOf5
+```
+</div>
+<div style="flex:2.0;min-width:0">
+
+```
+array[N]
+numberOf5 = 0
+nWorkers = 4
+count5(array, workerId):
+    beg = workerId * N/nWorkers
+    end = (workerId + 1) * N/nWorkers
+    for i in [beg, end]: 
+        if array[i] == 5:
+            lock()
+            numberOf5 += 1
+            unlock()
+return numberOf5
+```
+
+</div>
+</div>
+
+---
+
+## Performance
+
+![w:600px](images/performance.png)
+
+---
+
+## Performance
+
+![w:600px](images/performance.png) ![w:500px](images/chan.png)
+
+---
+
+## Contention
+
+- Conflicting Data Updates Cause Serialization and Delays
+- Massively parallel execution cannot afford serialization
+
+![w:1000px](images/contention.png)
+
+---
+
+## How to mitigate contention
+
+Contention can be mitigated with:
+- Privatization
+- Transformation of the access pattern
+- Avoid frequent transactions to/from the global main memory
+and read/write the data locally as much as possible before
+updating the global value
+- Make use of registers and shared memory for aggregating partial
+results
+    - Requires storage resources to keep copies of data structures
+
+---
+
+## Count number of 5s
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+```
+array[N]
+numberOf5 = 0
+for i in [0, N]: 
+    if array[i] == 5:
+        numberOf5 += 1
+return numberOf5
+```
+</div>
+<div style="flex:2.0;min-width:0">
+
+```
+array[N]
+numberOf5 = 0
+nWorkers = 4
+count5(array, workerId):
+    privateResult = 0
+    beg = workerId * N/nWorkers
+    end = (workerId + 1) * N/nWorkers
+    for i in [beg, end]: 
+        if array[i] == 5:
+            privateResult += 1
+    lock()
+    numberOf5 += privateResult
+    unlock()
+return numberOf5
+```
+
+</div>
+</div>
+
+---
+
+## Performance with privatization
+
+<div style="text-align:center">
+
+![w:800px](images/better-performance.png)
+
+</div>
+
+The T=8 version does not take half of the time w.r.t. T=4 ... Why?
+
+---
+
+## Amdahl's law
+
+The maximum theoretical throughput is limited by Amdahl's Law:
+- Every program contains a serial part
+- Only one PU can execute the serial part
+- The speedup using *p* PUs is given by
+$$
+    S(p) = \frac{T_s}{T_p}
+$$
+- If *f* is the fraction of the program that runs serially, the parallel execution time is given by: 
+$$
+    T_p = fT_s + (1 - f)T_p = fT_s + \frac{(1 - f)T_s}{p}
+$$
+
+---
+
+## Amdahl's law speedup
+
+The speedup becomes:
+$$
+    S(p, f) = \frac{T_s}{fT_s + \frac{(1 - f)T_s}{p}} = \frac{1}{f + \frac{(1 - f)}{p}}
+$$
+
+<div style="text-align:center">
+
+![w:600px](images/amdahl.png)
+
+</div>
+
+---
+
+## Gustafson's law
+
+Amdahl’s Law assumes that a problem can be split in a number of independent chunks n that can be processed in parallel and that this number is fixed
+- Many times, the increase of the size of a problem does not correspond to a growth of the sequential part
+    − increasing the size of the problem does not change the time spent executing the sequential part, and only affects the parallel portion
+- Let $f(n)$ be the sequential code fraction of the program
+$$
+    S(n) = f(n) + p(1 - f(n))
+$$
+- $f(n)$ decreases to 0 when n approaches infinity.
+- The maximum speedup is then given by:
+It's still worth to learn parallel computing: computations involving arbitrarily large data sets can be efficiently parallelized!
+$$
+    S_{max} = \lim_{n \to \infty} S(n) = p
+$$
+
+---
+
+<!-- _header: '' -->
+<!-- _class: section-title -->
+
+## Computing with accelerators
 
 ---
 
@@ -294,6 +600,7 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 ---
 
 <!-- _header: '' -->
+<!-- _class: section-title -->
 
 ## Heterogeneous Parallel Computing Systems
 
@@ -311,38 +618,70 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 
 ## Simple Processing Flow
 
-<!-- image placeholder: CPU block (CPU, Bridge, CPU Memory) ↔ GPU block (GigaThread, SMs, Interconnect, L2, DRAM) -->
+<div style="text-align:center">
+
+![w:950px](images/processing-1.png)
+
+</div>
 
 ---
 
 ## Simple Processing Flow
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:700px](images/processing-2.png)
+
+</div>
+<div style="flex:1.3;min-width:0">
 
 1. Copy input data from CPU memory to GPU memory
 
-<!-- image placeholder: CPU-GPU diagram with arrow showing data transfer from CPU Memory to GPU DRAM -->
+</div>
+</div>
 
 ---
 
 ## Simple Processing Flow
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:700px](images/processing-3.png)
+
+</div>
+<div style="flex:1.3;min-width:0">
 
 1. Copy input data from CPU memory to GPU memory
 2. Load GPU program and execute, caching data on chip for performance
 
-<!-- image placeholder: CPU-GPU diagram with arrows showing compute within GPU SMs -->
+</div>
+</div>
 
 ---
 
 ## Simple Processing Flow
+
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:2.0;min-width:0">
+
+![w:700px](images/processing-4.png)
+
+</div>
+<div style="flex:1.3;min-width:0">
 
 1. Copy input data from CPU memory to GPU memory
 2. Load GPU program and execute, caching data on chip for performance
 3. Copy results from GPU memory to CPU memory
 
-<!-- image placeholder: CPU-GPU diagram with arrow showing results transfer from GPU DRAM to CPU Memory -->
+</div>
+</div>
 
 ---
 
 <!-- _header: '' -->
+<!-- _class: section-title -->
 
 ## Basics
 
@@ -439,12 +778,18 @@ int main() {
 - Triple angle brackets mark a call from host code to device code
   - Also called a "kernel launch"
   - We'll return to the parameters in a moment
+  
+- CUDA streams are simply queues of operations to be executed on the device
+  - Operations in a stream are executed in order
+  - Operations in different streams may be interleaved
+  - More details on streams later
 
 - That's all that is required to execute a function on the GPU!
 
 ---
 
 <!-- _header: '' -->
+<!-- _class: section-title -->
 
 ## Parallel constructs in CUDA
 
@@ -546,8 +891,6 @@ int main() {
 }
 ```
 
-A stream is a queue of operations to be executed on the device
-
 ---
 
 ## Coordinating Host & Device
@@ -570,14 +913,14 @@ A stream is a queue of operations to be executed on the device
 - GPU computing is about massive parallelism
   - So how do we run code in parallel on the device?
 
-```
-add<<< 1, 1, 0, stream >>>();
+```cpp
+add<<<1, 1, 0, stream>>>();
 ```
 
 ↓
 
-```
-add<<< N, 1, 0, stream >>>();
+```cpp
+add<<<N, 1, 0, stream>>>();
 ```
 
 - Instead of executing `add()` once, execute N times in parallel
@@ -786,181 +1129,7 @@ https://infn-esc.github.io/esc25/gpu/cuda.html
 ---
 
 <!-- _header: '' -->
-
-## Shared Memory with CUDA
-
----
-
-## Why Bother with Threads?
-
-- Threads seem unnecessary
-  - They add a level of complexity
-  - What do we gain?
-
-- Unlike parallel blocks, threads have mechanisms to:
-  - Communicate
-  - Synchronize
-
-- To understand the gain, we need a new example…
-
----
-
-## 1D Stencil
-
-- Consider applying a 1D stencil sum to a 1D array of elements
-  - Each output element is the sum of input elements within a radius
-  - Example of stencil with radius 2:
-
-<!-- image placeholder: input array [5,2,1,9,2,3,6,1] → output array [8,17,19,17,21,21,12,10] -->
-
----
-
-## Sharing Data Between Threads
-
-- Terminology: within a block, threads share data via shared memory
-
-- Extremely fast on-chip memory, user-managed
-
-- Declare using `__shared__`, allocated per block
-
-- Data is not visible to threads in other blocks
-
----
-
-## Implementing With Shared Memory
-
-Cache data in shared memory
-
-- Read `(blockDim.x + 2 * radius)` input elements from global memory to shared memory
-- Compute `blockDim.x` output elements
-- Write `blockDim.x` output elements to global memory
-- Each block needs a halo of radius elements at each boundary
-
-<!-- image placeholder: halo diagram with "halo on left", "blockDim.x output elements", "halo on right" -->
-
----
-
-## Stencil Kernel
-
-```cpp
-__global__ void stencil_1d(const int *in, int *out, int n) {
-    __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
-    auto g_index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (g_index < n) {
-        auto s_index = threadIdx.x + RADIUS;
-
-        // Read input elements into shared memory
-        temp[s_index] = in[g_index];
-        if (threadIdx.x < RADIUS) {
-            temp[s_index - RADIUS] = g_index - RADIUS < 0 ? 0 :
-                                     in[g_index - RADIUS];
-            temp[s_index + BLOCK_SIZE] = g_index + BLOCK_SIZE < n ?
-                                         in[g_index + BLOCK_SIZE] : 0;
-        }
-
-        // Apply the stencil
-        int result = 0;
-        for (int offset = -RADIUS ; offset <= RADIUS ; offset++)
-            result += temp[s_index + offset];
-
-        // Store the result
-        out[g_index] = result;
-    }
-}
-```
-
-<!-- image placeholder: shared memory block cube diagrams -->
-
----
-
-## Race condition
-
-- The stencil example will not work...
-- A race condition occurs when multiple tasks read from and write to the same memory without proper synchronization.
-- The "race" may finish correctly sometimes and therefore complete without errors, and at other times it may finish incorrectly.
-- If a data race occurs, the behavior of the program is undefined.
-
----
-
-## `__syncthreads()`
-
-`void __syncthreads();`
-
-Synchronizes all threads within a block
-- Ensuring correct execution order when threads share data.
-- Used to prevent race conditions
-
-All threads must reach the barrier
-- In conditional code, the condition must be uniform across the block
-
----
-
-## Stencil Kernel, fixed
-
-```cpp
-__global__ void stencil_1d(const int *in, int *out, int n) {
-    __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
-    auto g_index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (g_index < n) {
-        auto s_index = threadIdx.x + RADIUS;
-
-        // Read input elements into shared memory
-        temp[s_index] = in[g_index];
-        if (threadIdx.x < RADIUS) {
-            temp[s_index - RADIUS] = g_index - RADIUS < 0? 0 :
-                                     in[g_index - RADIUS];
-            temp[s_index + BLOCK_SIZE] = g_index + BLOCK_SIZE < n ?
-                                         in[g_index + BLOCK_SIZE] : 0;
-        }
-        __syncthreads();
-
-        // Apply the stencil
-        int result = 0;
-        for (auto offset = -RADIUS ; offset <= RADIUS ; ++offset)
-            result += temp[s_index + offset];
-
-        // Store the result
-        out[g_index] = result;
-    }
-}
-```
-
----
-
-## Atomic operations
-
-- When we need to modify a variable that is shared among many threads we use atomic operations
-- All atomics take as input the address of the shared variable and the value needed for the operation
-  - Ex. `atomicAdd(&data, increment)`
-- Atomics grant access to the shared variable to only one thread at a time
-  - Hence the name, they are indivisible
-- There are many different atomic operations
-  - `atomicInc`, `atomicDec`, `atomicMax`, `atomicMin`, `atomicAdd`, …
-- If we want block-level synchronization, we call the atomic with the _block suffix
-  - Ex. `atomicAdd_block`
-
----
-
-## Review
-
-Launching parallel threads
-
-- Launch N blocks with M threads per block with `kernel<<<N,M,0,stream>>>(…);`
-- Use `blockIdx.x` to access block index within grid
-- Use `threadIdx.x` to access thread index within block
-
-Allocate elements to threads:
-`auto index = threadIdx.x + blockIdx.x * blockDim.x;`
-
-Use `__shared__` to declare a variable/array in shared memory
-- Data is shared between threads in a block
-- Not visible to threads in other blocks
-
-- Use `__syncthreads()` as a barrier to prevent data hazards
-
----
-
-<!-- _header: '' -->
+<!-- _class: section-title -->
 
 ## The thrust/roc-thrust libraries
 
@@ -1025,11 +1194,10 @@ int main() {
   - mark the lambda as `__host__` `__device__`
   - use `thrust::host` or `thrust::device` execution policy
 
-Found in header `thrust/execution_policy.h`
-
 ```cpp
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/execution_policy.h>
 
 int main() {
     thrust::device_vector<float> f_temperatures;
@@ -1048,6 +1216,14 @@ int main() {
 
 ## Execution space specifier
 
+<div style="display:flex;gap:1em;align-items:flex-start">
+<div style="flex:5.3;min-width:0">
+
+![w:450px](images/execution-space.png)
+
+</div>
+<div style="flex:6.8;min-width:0">
+
 - The `__host__` and `__device__` specifiers say which compilers should compile a function
 
 ```cpp
@@ -1059,17 +1235,14 @@ auto op = [] __host__ __device__ (float t) {
 - So, the specifiers say *where* a certain function *can* run
 - It does not specify where the function *will* run in a certain call
 
-<!-- image placeholder: compilation diagram: Host Compiler → vfmadd132ss (Executable by CPU), Device Compiler → fma.rn.f32 (Executable by GPU) -->
-
-\* NVIDIA DLI
+</div>
+</div>
 
 ---
 
 ## Execution space specifier
 
-<!-- image placeholder: compile time / runtime diagram showing thrust::host executing op(42.0f) on CPU and thrust::device executing op(42.0f) on GPU -->
-
-\* NVIDIA DLI
+![w:950px](images/execution.png)
 
 ---
 
@@ -1262,7 +1435,193 @@ https://infn-esc.github.io/esc25/gpu/thrust.html
 
 ---
 
+
 <!-- _header: '' -->
+<!-- _class: section-title -->
+
+## Shared Memory with CUDA
+
+---
+
+## Why Bother with Threads?
+
+- Threads seem unnecessary
+  - They add a level of complexity
+  - What do we gain?
+
+- Unlike parallel blocks, threads have mechanisms to:
+  - Communicate
+  - Synchronize
+
+- To understand the gain, we need a new example…
+
+---
+
+## 1D Stencil
+
+- Consider applying a 1D stencil sum to a 1D array of elements
+  - Each output element is the sum of input elements within a radius
+  - Example of stencil with radius 2:
+
+<div style="text-align:center">
+
+![w:500px](images/stencil.png)
+
+</div>
+
+---
+
+## Sharing Data Between Threads
+
+- Terminology: within a block, threads share data via shared memory
+
+- Extremely fast on-chip memory, user-managed
+
+- Declare using `__shared__`, allocated per block
+
+- Data is not visible to threads in other blocks
+
+---
+
+## Implementing With Shared Memory
+
+Cache data in shared memory
+
+- Read `(blockDim.x + 2 * radius)` input elements from global memory to shared memory
+- Compute `blockDim.x` output elements
+- Write `blockDim.x` output elements to global memory
+- Each block needs a halo of radius elements at each boundary
+
+<div style="text-align:center">
+
+![w:1000px](images/stencil-2.png)
+
+</div>
+
+---
+
+## Stencil Kernel
+
+```cpp
+__global__ void stencil_1d(const int *in, int *out, int n) {
+    __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
+    auto g_index = threadIdx.x + blockIdx.x * blockDim.x;
+    if (g_index < n) {
+        auto s_index = threadIdx.x + RADIUS;
+
+        // Read input elements into shared memory
+        temp[s_index] = in[g_index];
+        if (threadIdx.x < RADIUS) {
+            temp[s_index - RADIUS] = g_index - RADIUS < 0 ? 0 :
+                                     in[g_index - RADIUS];
+            temp[s_index + BLOCK_SIZE] = g_index + BLOCK_SIZE < n ?
+                                         in[g_index + BLOCK_SIZE] : 0;
+        }
+
+        // Apply the stencil
+        int result = 0;
+        for (int offset = -RADIUS ; offset <= RADIUS ; offset++)
+            result += temp[s_index + offset];
+
+        // Store the result
+        out[g_index] = result;
+    }
+}
+```
+
+<!-- image placeholder: shared memory block cube diagrams -->
+
+---
+
+## Race condition
+
+- The stencil example will not work...
+- A race condition occurs when multiple tasks read from and write to the same memory without proper synchronization.
+- The "race" may finish correctly sometimes and therefore complete without errors, and at other times it may finish incorrectly.
+- If a data race occurs, the behavior of the program is undefined.
+
+---
+
+## `__syncthreads()`
+
+`void __syncthreads();`
+
+Synchronizes all threads within a block
+- Ensuring correct execution order when threads share data.
+- Used to prevent race conditions
+
+All threads must reach the barrier
+- In conditional code, the condition must be uniform across the block
+
+---
+
+## Stencil Kernel, fixed
+
+```cpp
+__global__ void stencil_1d(const int *in, int *out, int n) {
+    __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
+    auto g_index = threadIdx.x + blockIdx.x * blockDim.x;
+    if (g_index < n) {
+        auto s_index = threadIdx.x + RADIUS;
+
+        // Read input elements into shared memory
+        temp[s_index] = in[g_index];
+        if (threadIdx.x < RADIUS) {
+            temp[s_index - RADIUS] = g_index - RADIUS < 0? 0 :
+                                     in[g_index - RADIUS];
+            temp[s_index + BLOCK_SIZE] = g_index + BLOCK_SIZE < n ?
+                                         in[g_index + BLOCK_SIZE] : 0;
+        }
+        __syncthreads();
+
+        // Apply the stencil
+        int result = 0;
+        for (auto offset = -RADIUS ; offset <= RADIUS ; ++offset)
+            result += temp[s_index + offset];
+
+        // Store the result
+        out[g_index] = result;
+    }
+}
+```
+
+---
+
+## Atomic operations
+
+- When we need to modify a variable that is shared among many threads we use atomic operations
+- All atomics take as input the address of the shared variable and the value needed for the operation
+  - Ex. `atomicAdd(&data, increment)`
+- Atomics grant access to the shared variable to only one thread at a time
+  - Hence the name, they are indivisible
+- There are many different atomic operations
+  - `atomicInc`, `atomicDec`, `atomicMax`, `atomicMin`, `atomicAdd`, …
+- If we want block-level synchronization, we call the atomic with the _block suffix
+  - Ex. `atomicAdd_block`
+
+---
+
+## Review
+
+Launching parallel threads
+
+- Launch N blocks with M threads per block with `kernel<<<N,M,0,stream>>>(…);`
+- Use `blockIdx.x` to access block index within grid
+- Use `threadIdx.x` to access thread index within block
+
+Allocate elements to threads:
+`auto index = threadIdx.x + blockIdx.x * blockDim.x;`
+
+Use `__shared__` to declare a variable/array in shared memory
+- Data is shared between threads in a block
+- Not visible to threads in other blocks
+
+- Use `__syncthreads()` as a barrier to prevent data hazards
+
+---
+
+<!-- _header: '' -->
+<!-- _class: section-title -->
 
 ## Device Management
 
@@ -1340,14 +1699,15 @@ cudaFreeHost(area);
 - Using multiple streams allows to execute concurrently pieces of code that are independent
 - This allows to maximize the use of the machine
 
-![w:800px](images/streams.png)
-<!-- image placeholder: concurrency diagram showing CPU (async copy, launch, wait, write, wait), GPU compute stream, copy stream (copy D2H), and buffer -->
+<div style="text-align:center">
+
+![w:900px](images/streams.png)
+
+</div>
 
 ---
 
 ## CUDA Streams
-
-<!-- image placeholder: stream timeline diagram showing stream 0-3 with staggered H2D, K, D2H operations -->
 
 ```cpp
 std::vector<cudaStream_t> streams(4);
@@ -1356,10 +1716,10 @@ for (auto& s: streams)
     cudaStreamCreate(&s);
 // allocate data buffers on the host
 std::vector<float*> hPtrs(4); std::vector<float*> dPtrs(4);
-for (int i=0; i<4; ++i)
+for (auto i = 0; i < 4; ++i)
     cudaMallocHost(&hPtrs[i],memSize);
 // allocate on device, copy data and launch kernels
-for (int i=0; i<4; ++i) {
+for (auto i = 0; i < 4; ++i) {
     cudaMallocAsync(&dPtrs[i],memSize, streams[i]);
     cudaMemcpyAsync(dPtrs[i],hPtrs[i], memSize, cudaMemcpyHostToDevice, streams[i]);
     kernelA<<<100,512,0,streams[i]>>>(dPtrs[i]);
@@ -1440,31 +1800,26 @@ for (auto& s: streams) {
 
 ## CUB cooperative algorithms
 
-- Cooperative algorithms make many threads cooperate to obtain the final result
-- They frequently use shared memory, which allows the threads to communicate
-
 ```cpp
 #include <cub/block/block_reduce.cuh>
 
 __global__ void Kernel(const int* data, int* block_sums, int N) {
     __shared__ typename cub::BlockReduce<int, 4>::TempStorage temp_storage;
 
-    int tidx = threadIdx.x + blockIdx.x * blockDim.x;
-    int thread_data = 0;
-
-    // Guard against out-of-bounds
+    auto tidx = threadIdx.x + blockIdx.x * blockDim.x;
+    auto thread_data = 0;
     if (tidx < N)
         thread_data = data[tidx];
 
     // Reduce values within the block
-    int block_sum = cub::BlockReduce<int, 256>(temp_storage).Sum(thread_data);
-
+    auto block_sum = cub::BlockReduce<int, 256>(temp_storage).Sum(thread_data);
     // Write result from one thread per block
     if (threadIdx.x == 0)
         block_sums[blockIdx.x] = block_sum;
 }
 ```
 
+- Cooperative algorithms make many threads cooperate to obtain the final result
 - Algorithms are templated on data type, blocksize and the algorithm implementation
 - They provide a constructor and methods for executing the algorithm
 - The method gets called by each thread, and the temporary storage allows cooperation
