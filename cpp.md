@@ -58,6 +58,15 @@ blockquote {
   color: #4a3800;
 }
 
+/* Section title slides (title-only slides that introduce a new section) */
+section.section-title {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
 /* Title slide */
 section.title-slide {
   background: #0033A0 !important;
@@ -191,6 +200,8 @@ C++ is a complex and large programming language (and library)
 
 ---
 
+<!-- _class: section-title -->
+
 # Resource management
 
 ---
@@ -201,7 +212,7 @@ C++ is a complex and large programming language (and library)
 <div style="flex:1.7;min-width:0">
 
 - A pointer is an object containing the address to a memory region
-    - It can be NULL, i.e. not pointing to anything
+    - It can be `nullptr`, i.e. not pointing to anything
     - The address that it points to can be changed
     - The data in the pointed memory can be accessed with the * operator
 - A reference is a mapping to another object
@@ -314,7 +325,7 @@ $ ./a.out
 ## Hands-on
 
 - C++ → Memory issues
-- Get familiar with Valgrind (if available) and memory sanitizers
+- Get familiar with Valgrind and memory sanitizers
 - Inspect, compile, run directly and run through valgrind or memory sanitizers (not both together)
   - `non_owning_pointer.cpp`
   - `array_too_small.cpp`
@@ -590,6 +601,8 @@ auto f = std::shared_ptr<FILE>{
 
 ---
 
+<!-- _class: section-title -->
+
 # Containers
 
 ---
@@ -683,6 +696,9 @@ Heap occupancy: `sizeof(S)` + `sizeof(S*)` + `new` internal space overhead
 
 **Stack**
 
+<div style="display:flex;gap:2em">
+<div>
+
 ```cpp
 void stack()
 {
@@ -690,6 +706,9 @@ void stack()
   ...
 }
 ```
+
+</div>
+<div>
 
 ```asm
 stack():
@@ -699,8 +718,13 @@ stack():
      addq $4, %rsp
      ret
 ```
+</div>
+</div>
 
 **Heap**
+
+<div style="display:flex;gap:2em">
+<div>
 
 ```cpp
 void heap()
@@ -710,6 +734,8 @@ void heap()
   delete m;
 }
 ```
+</div>
+<div>
 
 ```asm
 heap():
@@ -725,14 +751,13 @@ heap():
      addq  $8, %rsp
      ret
 ```
+</div>
+</div>
 
 ```
 $ g++ -O3 heap.cpp && ./a.out
 100000000 iterations: 14 ns
 ```
-
-i.e. 14 ns just to allocate/deallocate an `int`
-
 ---
 
 ## STL Containers
@@ -767,11 +792,11 @@ i.e. 14 ns just to allocate/deallocate an `int`
 - Search, removal and insertion have logarithmic complexity
 - Typically implemented as balanced (red-black) trees
 
+<div style="text-align:center">
+
 ![height:400](images/Red-black_tree_example.png)
 
-<!-- *By Cburnett — Own work, CC BY-SA 3.0 https://commons.wikimedia.org/w/index.php?curid=1508398* -->
-
-<!-- Each node stores: value, left/right/parent pointers, color bit -->
+</div>
 
 ---
 
@@ -783,6 +808,8 @@ i.e. 14 ns just to allocate/deallocate an `int`
 - Compare the performance obtained with the two containers
 
 ---
+
+<!-- _class: section-title -->
 
 # Algorithms and functions
 
@@ -1148,9 +1175,7 @@ Print a few numbers and check that they correspond to what is produced by `std::
 
 ```cpp
 struct LessThan42 {           
-  auto operator()(int n) {                           
-    return n < 42;            
-  }                           
+  auto operator()(int n) { return n < 42; }                           
 };                            
 
 std::find_if(..., LessThan42{});
@@ -1358,6 +1383,8 @@ for (auto x : std::views::iota(0, N) |
 ```
 
 ---
+
+<!-- _class: section-title -->
 
 # Move semantics
 
