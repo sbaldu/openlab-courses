@@ -778,9 +778,17 @@ $ g++ -O3 heap.cpp && ./a.out
 
 ## Sequence containers
 
-`std::array` — data stored directly on the stack (fixed-size, contiguous)
 
 `std::vector` — control block on stack (begin/end/capacity pointers), data on heap (contiguous)
+
+
+<div style="text-align:center">
+
+![w:600px](images/vector.png)
+
+</div>
+
+`std::array` — data stored directly on the stack (fixed-size, contiguous)
 
 `std::list` — control block on stack (head/tail/size), nodes allocated individually on heap (doubly-linked)
 
