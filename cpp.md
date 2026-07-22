@@ -211,10 +211,10 @@ C++ is a complex and large programming language (and library)
 <div style="display:flex;gap:2em;align-items:flex-start">
 <div style="flex:1.7;min-width:0">
 
-- A pointer is an object containing the address to a memory region
+- A pointer is an object representing the address to an object or memory region
     - It can be `nullptr`, i.e. not pointing to anything
     - The address that it points to can be changed
-    - The data in the pointed memory can be accessed with the * operator
+    - The data in the pointed memory can be accessed with the `*` operator
 - A reference is a mapping to another object
     - It is bound to the object that it’s constructed from
         - It cannot be null and cannot be changed to reference another object
@@ -228,13 +228,13 @@ C++ is a complex and large programming language (and library)
 
 ```cpp
 int* p = new int(5);
-std::cout << p << std::endl;    // 0x1221b2b0
-std::cout << *p << std::endl;   // 5
+std::cout << p << '/n';    // 0x1221b2b0
+std::cout << *p << '/n';   // 5
 
 int x = 5;
 int& rx = x;
 ++rx;
-std::cout << x << std::endl;    // 6
+std::cout << x << '/n';    // 6
 ```
 
 ![w:460px](images/pointer.png)
@@ -609,7 +609,7 @@ auto f = std::shared_ptr<FILE>{
 
 ## Dynamic memory allocation
 
-It's not always possible to know at compile time which type of objects is needed or how many of them
+It's not always possible to know at compile time which types of objects or how many are needed
 
 - run-time polymorphism
 
@@ -1016,7 +1016,11 @@ auto it = std::find(std::execution::par, v.begin(), v.end(), 42);
 
 ## Computational complexity (cont.)
 
+<div style="text-align:center">
+
 ![height:80%](images/O.png)
+
+</div>
 
 *Cmglee / CC BY-SA (https://creativecommons.org/licenses/by-sa/4.0)*
 
