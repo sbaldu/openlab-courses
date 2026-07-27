@@ -4,7 +4,7 @@ theme: gaia
 paginate: true
 math: mathjax
 html: true
-header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_unibo.png)'
+header: 
 footer: 'Simone Balducci · Efficient C++ Programming'
 ---
 
@@ -142,7 +142,6 @@ July 2026
 
 ## Outline
 
-- Introduction
 - Algorithms 
 - Function objects
 - Lambda expressions
@@ -151,6 +150,8 @@ July 2026
 - Move semantics
 
 ---
+
+<!-- _class: section-title -->
 
 # Introduction
 
@@ -460,6 +461,39 @@ auto px = std::make_shared<Histo>();    // better
 take(px);                               // ok, copyable
 take(std::move(px));                    // ok, movable
 ```
+
+---
+
+## BONUS: Circular pointing and `weak_ptr`
+
+- `shared_ptr` can create circular references, preventing the pointee from being deleted
+
+<div style="display:flex;gap:2em;align-items:flex-start">
+<div style="flex:1;min-width:0">
+
+```cpp
+struct Node {
+  std::shared_ptr<Node> next;
+  std::shared_ptr<Node> prev;
+};
+
+auto n1 = std::make_shared<Node>();
+auto n2 = std::make_shared<Node>();
+n1->next = n2;
+n2->prev = n1; // circular reference
+```
+
+</div>
+<div style="flex:0.8;min-width:0">
+
+![w:450px](images/circular.png)
+
+</div>
+</div>
+
+- `weak_ptr` is a non-owning smart pointer that can break the circular reference
+- `weak_ptr` is created from a `shared_ptr` and doesn't increase the reference count
+
 
 ---
 
