@@ -3,7 +3,7 @@ marp: true
 theme: gaia
 paginate: true
 math: mathjax
-header: '![](assets/logo_cern.png) ![](assets/logo_infn.png) ![](assets/logo_unibo.png)'
+header: ''
 footer: 'Simone Balducci · Introduction to Parallel Computing and GPU programming with CUDA'
 ---
 
@@ -481,16 +481,6 @@ $$
 
 ---
 
-## Accelerators
-
-GPUs were traditionally used for real-time rendering/gaming.
-
-AMD and NVIDIA main manufacturers for discrete GPUs, Intel for integrated ones
-
-![](images/amd-logo.png) <!-- image placeholder: intel-logo --> ![](images/nvidia-logo.png)
-
----
-
 ## CPU vs GPU architectures
 
 <div style="display:flex;gap:1em;align-items:flex-start">
@@ -549,7 +539,13 @@ AMD and NVIDIA main manufacturers for discrete GPUs, Intel for integrated ones
 </div>
 </div>
 
-<!-- image placeholder: GPU architecture diagram (many cores, DRAM) and GPU photo -->
+---
+
+## Streaming multiprocessors
+
+<div style="text-align:center">
+
+![w:490px](images/gpu-arch-detail.png)
 
 ---
 
@@ -557,7 +553,11 @@ AMD and NVIDIA main manufacturers for discrete GPUs, Intel for integrated ones
 
 For optimal CPU cache utilization, the thread *a* should process element *i* and *i+1*
 
-<!-- image placeholder: CPU architecture diagram with CPU Thread 0, CPU Thread 1, CPU Thread 2, CPU Thread 3 accessing array elements -->
+<div style="text-align:center">
+
+![w:1100px](images/cpu-access.png)
+
+</div>
 
 ---
 
@@ -570,7 +570,11 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 - Coalesced memory access pattern optimal for GPUs: thread *a* should process element *i*, thread *a+1* the element and *i+1*
   - Lose an order of magnitude in performance if cached access pattern used on GPU
 
-<!-- image placeholder: SM internal diagram, memory access coalescing diagram -->
+<div style="text-align:center">
+
+![w:900px](images/gpu-access.png)
+
+</div>
 
 ---
 
@@ -590,12 +594,10 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 - If an operand is not ready the warp will stall
 - Context switch between warps when stalled
 - Context switch must be very fast
-- Typical values of warp size 16, 32, 64 depending on vendor
+- Typical values of warp size are 32 or 64 depending on vendor
 
 </div>
 </div>
-
-<!-- image placeholder: warp execution diagram showing active/stalled warps -->
 
 ---
 
@@ -611,8 +613,7 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 - Terminology
   - Host &nbsp;&nbsp;&nbsp; The CPU and its memory space
   - Device &nbsp; The GPU and its memory space
-
-<!-- image placeholder: Host (CPU + RAM photo), Device (GPU card photo) -->
+  - Kernel &nbsp; A function that runs on the device
 
 ---
 
@@ -695,21 +696,6 @@ For optimal CPU cache utilization, the thread *a* should process element *i* and
 - Learning Curve
   - Initial effort focuses on understanding new APIs and language constructs.
   - Core programming logic often remains unchanged.
-
----
-
-## SPMD Phases
-
-- Initialize
-  - Establish localized data structure and communication channels
-- Obtain a unique identifier
-  - Each thread acquires a unique identifier, typically range from 0 to N-1, where N is the number of threads
-- Distribute Data
-  - Decompose global data into chunks and localize them, or
-  - Sharing/replicating major data structure using thread ID to associate subset of the data to threads
-- Run the core computation
-- Finalize
-  - Reconcile global data structure, prepare for the next major iteration
 
 ---
 
@@ -943,35 +929,11 @@ __global__ void add(const int *a, const int *b, int *c)
 
 - By using `blockIdx.x` to index into the array, each block handles a different index
 
----
+<div style="text-align:center">
 
-## Remember SPMD?
+![w:1000px](images/blocks-add.png)
 
-```cpp
-__global__ void add(const int *a, const int *b, int *c)
-{
-    c[blockIdx.x] = a[blockIdx.x] + b[blockIdx.x];
-}
-```
-
-- On the device, each block can execute in parallel:
-
-<!-- image placeholder: Block 0: c[0]=a[0]+b[0], Block 1: c[1]=a[1]+b[1], Block 2: c[2]=a[2]+b[2], Block 3: c[3]=a[3]+b[3] -->
-
----
-
-## Vector Addition on the Device: add()
-
-- Returning to our parallelized `add()` kernel
-
-```cpp
-__global__ void add(const int *a, const int *b, int *c)
-{
-    c[blockIdx.x] = a[blockIdx.x] + b[blockIdx.x];
-}
-```
-
-- Let's take a look at `main()` ...
+</div>
 
 ---
 
@@ -1026,6 +988,42 @@ __global__ void add(const int *a, const int *b, int *c) {
 
 ---
 
+```cpp
+int main() {
+    cudaStream_t stream; cudaStreamCreate(&stream);
+    int N = 512;
+    std::vector<int> a, b, c;
+    a.resize(N); b.resize(N); c.resize(N);
+    int *d_a, *d_b, *d_c; // device copies of a, b, c
+    int size = N * sizeof(int);
+    // Alloc space for host copies of a, b, c and
+    // setup input values
+    my_favorite_random_ints(a, N);
+    my_favorite_random_ints(b, N);
+    // Alloc memory for device copies of a, b, c
+    cudaMallocAsync(&d_a, size, stream);
+    cudaMallocAsync(&d_b, size, stream);
+    cudaMallocAsync(&d_c, size, stream);
+    // Copy inputs to device
+    cudaMemcpyAsync(d_a, a.data(), size, cudaMemcpyHostToDevice, stream);
+    cudaMemcpyAsync(d_b, b.data(), size, cudaMemcpyHostToDevice, stream);
+    // Launch add() kernel on GPU with N blocks
+    add<<<1, N, 0, stream>>>(d_a, d_b, d_c);
+    // Copy result back to host
+    cudaMemcpyAsync(c.data(), d_c, size, cudaMemcpyDeviceToHost, stream);
+    // Cleanup
+    cudaFreeAsync(d_a,stream);
+    cudaFreeAsync(d_b,stream);
+    cudaFreeAsync(d_c,stream);
+    cudaStreamSynchronize(stream);
+    // Now you can use content of the c vector…
+    cudaStreamDestroy(stream);
+}
+```
+
+---
+
+
 ## Combining Blocks and Threads
 
 - We've seen parallel vector addition using:
@@ -1043,6 +1041,12 @@ First let's discuss data indexing...
 
 - No longer as simple as using `blockIdx.x` and `threadIdx.x`
   - Consider indexing an array with one element per thread (8 threads/block)
+
+<div style="text-align:center">
+
+![w:1000px](images/indexing.png)
+
+</div>
 
 <!-- image placeholder: array indexed by threadIdx.x 0-7 for each of blockIdx.x = 0, 1, 2, 3 -->
 
@@ -1121,10 +1125,10 @@ Update the kernel launch:
 
 ---
 
+<!-- _class: section-title -->
 <!-- _header: '' -->
 
-Time for the first three exercises!
-https://infn-esc.github.io/esc25/gpu/cuda.html
+**Time for the first three exercises!**
 
 ---
 
@@ -1427,14 +1431,6 @@ struct discard_iterator {
 ```
 
 ---
-
-<!-- _header: '' -->
-
-It's time for exercises
-https://infn-esc.github.io/esc25/gpu/thrust.html
-
----
-
 
 <!-- _header: '' -->
 <!-- _class: section-title -->
