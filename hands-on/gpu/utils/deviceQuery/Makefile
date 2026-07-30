@@ -1,5 +1,5 @@
 all:
-	nvcc deviceQuery.cpp -o deviceQuery
+	/usr/local/cuda-13.3/bin/nvcc deviceQuery.cpp -o deviceQuery
 
 run: all
 	./deviceQuery
