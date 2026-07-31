@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
   // Your problem's size
   int N = 1024;
 
-  // Part 1 of 6: Allocate buffer in pinned host memory
+  // Part 1 of 6: Allocate buffer in pinned host memory (thrust::universal_vector)
   auto h_a = ...;
 
   // Part 2 of 6: Allocate buffer in device memory
@@ -38,13 +38,13 @@ int main(int argc, char **argv) {
   // Part 4 of 6: Create a cuda stream
 
   // Part 5 of 6: Copy data from device to host asynchronously
-  thrust::copy(thrust::cuda::par.on(queue), ...);
+  thrust::copy(thrust::cuda::par.on(stream), ...);
 
   // Part 6 of 6: Verify that the data returned to the host is correct
   assert(std::ranges::equal(h_a, std::views::iota(42) | std::views::take(N)));
 
   // Destroy the CUDA stream
-  CUDA_CHECK(cudaStreamDestroy(queue));
+  CUDA_CHECK(cudaStreamDestroy(stream));
 
   // If the program makes it this far, then the results are correct and
   // there are no run-time errors.  Good work!
