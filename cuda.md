@@ -139,7 +139,7 @@ CERN Experimental Physics Department
 
 ## Content of the theoretical session
 
-- Introduction to Parallel computing
+<!-- - Introduction to Parallel computing -->
 - Heterogeneous Parallel computing systems
 - CUDA Basics
 - Parallel kernels
@@ -159,304 +159,304 @@ CERN Experimental Physics Department
 
 ---
 
-## Modern systems
+<!-- ## Modern systems -->
 
-- Applications and technology demand novel architectures
-  - Driven by huge hunger for data (Big Data), new applications (ML/AI, graph analytics, genomics), ever-greater realism
-  - We can easily collect more data than we can analyze/understand
-  - Five walls: Energy, reliability, complexity, security, scalability
+<!-- - Applications and technology demand novel architectures -->
+<!--   - Driven by huge hunger for data (Big Data), new applications (ML/AI, graph analytics, genomics), ever-greater realism -->
+<!--   - We can easily collect more data than we can analyze/understand -->
+<!--   - Five walls: Energy, reliability, complexity, security, scalability -->
 
-<!-- image placeholder: FPGA, Heterogeneous Processors and Accelerators, Hybrid Memory, GPU, Persistent memory/Storage -->
+<!-- <!-1- image placeholder: FPGA, Heterogeneous Processors and Accelerators, Hybrid Memory, GPU, Persistent memory/Storage -1-> -->
 
----
+<!-- --- -->
 
-## Previously, in Moore's paradise 
+<!-- ## Previously, in Moore's paradise --> 
 
-<div style="text-align:center">
+<!-- <div style="text-align:center"> -->
 
-![w:800px](images/moore.png)
+<!-- ![w:800px](images/moore.png) -->
 
-</div>
+<!-- </div> -->
 
-- The main contribution to the gain in microprocessor performance at
-this stage came by increasing the clock frequency.
-- Applications’ performance doubled every 18 months without having
-to redesign the software or changing the source code
+<!-- - The main contribution to the gain in microprocessor performance at -->
+<!-- this stage came by increasing the clock frequency. -->
+<!-- - Applications’ performance doubled every 18 months without having -->
+<!-- to redesign the software or changing the source code -->
 
----
+<!-- --- -->
 
-## Moore's law
+<!-- ## Moore's law -->
 
-<div style="text-align:center">
+<!-- <div style="text-align:center"> -->
 
-![w:800px](images/previous-moore.png)
+<!-- ![w:800px](images/previous-moore.png) -->
 
-</div>
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Moore's law
+<!-- ## Moore's law -->
 
-<div style="position:relative; text-align:center">
+<!-- <div style="position:relative; text-align:center"> -->
 
-![w:800px](images/previous-moore.png)
+<!-- ![w:800px](images/previous-moore.png) -->
 
-<img src="images/unicorn.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:600px;">
+<!-- <img src="images/unicorn.png" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:600px;"> -->
 
-</div>
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Moore's law
+<!-- ## Moore's law -->
 
-<div style="text-align:center">
+<!-- <div style="text-align:center"> -->
 
-![w:900px](images/modern-moore.png)
+<!-- ![w:900px](images/modern-moore.png) -->
 
-</div>
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Reduce
+<!-- ## Reduce -->
 
-Reduction is a very common pattern in parallel computing:
-- Large input data structure distributed across many PU
-- Each PU computes a tally of its input
-- These tally values are combined to produce the final result
+<!-- Reduction is a very common pattern in parallel computing: -->
+<!-- - Large input data structure distributed across many PU -->
+<!-- - Each PU computes a tally of its input -->
+<!-- - These tally values are combined to produce the final result -->
 
-Examples:
-- The sum of the elements of an array
-- The maximum/minimum element of an array
-- Find the first occurrence of x in an array
+<!-- Examples: -->
+<!-- - The sum of the elements of an array -->
+<!-- - The maximum/minimum element of an array -->
+<!-- - Find the first occurrence of x in an array -->
 
----
+<!-- --- -->
 
-## Count number of 5s
+<!-- ## Count number of 5s -->
 
-<div style="display:flex;gap:1em;align-items:flex-start">
-<div style="flex:2.0;min-width:0">
+<!-- <div style="display:flex;gap:1em;align-items:flex-start"> -->
+<!-- <div style="flex:2.0;min-width:0"> -->
 
-```
-array[N]
-numberOf5 = 0
-for i in [0, N]: 
-    if array[i] == 5:
-        numberOf5 += 1
-return numberOf5
-```
-</div>
-<div style="flex:2.0;min-width:0">
+<!-- ``` -->
+<!-- array[N] -->
+<!-- numberOf5 = 0 -->
+<!-- for i in [0, N]: --> 
+<!--     if array[i] == 5: -->
+<!--         numberOf5 += 1 -->
+<!-- return numberOf5 -->
+<!-- ``` -->
+<!-- </div> -->
+<!-- <div style="flex:2.0;min-width:0"> -->
 
-```
-array[N]
-numberOf5 = 0
-nWorkers = 4
-count5(array, workerId):
-    beg = workerId * N/nWorkers
-    end = (workerId + 1) * N/nWorkers
-    for i in [beg, end]: 
-        if array[i] == 5:
-            numberOf5 += 1
-return numberOf5
-```
+<!-- ``` -->
+<!-- array[N] -->
+<!-- numberOf5 = 0 -->
+<!-- nWorkers = 4 -->
+<!-- count5(array, workerId): -->
+<!--     beg = workerId * N/nWorkers -->
+<!--     end = (workerId + 1) * N/nWorkers -->
+<!--     for i in [beg, end]: --> 
+<!--         if array[i] == 5: -->
+<!--             numberOf5 += 1 -->
+<!-- return numberOf5 -->
+<!-- ``` -->
 
-</div>
-</div>
+<!-- </div> -->
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Data races
+<!-- ## Data races -->
 
-Threads within a process share the same address space but not their execution stack
-- Pro: Threads can communicate using shared memory
-- Cons: Data Races if threads are not synchronized
+<!-- Threads within a process share the same address space but not their execution stack -->
+<!-- - Pro: Threads can communicate using shared memory -->
+<!-- - Cons: Data Races if threads are not synchronized -->
 
-Data races usually occur when threads modify data in different points in the instruction pipeline and the order of reading and writing operation matters (data dependence)
+<!-- Data races usually occur when threads modify data in different points in the instruction pipeline and the order of reading and writing operation matters (data dependence) -->
 
----
+<!-- --- -->
 
-## Data races
+<!-- ## Data races -->
 
-- Overlooking data races can lead to the corruption of the shared state (race condition)
-- Tricky to debug since the result depends on the timing between concurrent threads: unpredictable!
-- When a piece of code is clean of data races, it is said to be thread-safe.
-- The easiest ways to avoid conflicts in critical sections is to grant access one thread at a time: **mutex** (mutual exclusion)
+<!-- - Overlooking data races can lead to the corruption of the shared state (race condition) -->
+<!-- - Tricky to debug since the result depends on the timing between concurrent threads: unpredictable! -->
+<!-- - When a piece of code is clean of data races, it is said to be thread-safe. -->
+<!-- - The easiest ways to avoid conflicts in critical sections is to grant access one thread at a time: **mutex** (mutual exclusion) -->
 
-<div style="text-align:center">
+<!-- <div style="text-align:center"> -->
 
-![w:500px](images/race.png)
+<!-- ![w:500px](images/race.png) -->
 
-</div>
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Count number of 5s
+<!-- ## Count number of 5s -->
 
-<div style="display:flex;gap:1em;align-items:flex-start">
-<div style="flex:2.0;min-width:0">
+<!-- <div style="display:flex;gap:1em;align-items:flex-start"> -->
+<!-- <div style="flex:2.0;min-width:0"> -->
 
-```
-array[N]
-numberOf5 = 0
-for i in [0, N]: 
-    if array[i] == 5:
-        numberOf5 += 1
-return numberOf5
-```
-</div>
-<div style="flex:2.0;min-width:0">
+<!-- ``` -->
+<!-- array[N] -->
+<!-- numberOf5 = 0 -->
+<!-- for i in [0, N]: --> 
+<!--     if array[i] == 5: -->
+<!--         numberOf5 += 1 -->
+<!-- return numberOf5 -->
+<!-- ``` -->
+<!-- </div> -->
+<!-- <div style="flex:2.0;min-width:0"> -->
 
-```
-array[N]
-numberOf5 = 0
-nWorkers = 4
-count5(array, workerId):
-    beg = workerId * N/nWorkers
-    end = (workerId + 1) * N/nWorkers
-    for i in [beg, end]: 
-        if array[i] == 5:
-            lock()
-            numberOf5 += 1
-            unlock()
-return numberOf5
-```
+<!-- ``` -->
+<!-- array[N] -->
+<!-- numberOf5 = 0 -->
+<!-- nWorkers = 4 -->
+<!-- count5(array, workerId): -->
+<!--     beg = workerId * N/nWorkers -->
+<!--     end = (workerId + 1) * N/nWorkers -->
+<!--     for i in [beg, end]: --> 
+<!--         if array[i] == 5: -->
+<!--             lock() -->
+<!--             numberOf5 += 1 -->
+<!--             unlock() -->
+<!-- return numberOf5 -->
+<!-- ``` -->
 
-</div>
-</div>
+<!-- </div> -->
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Performance
+<!-- ## Performance -->
 
-![w:600px](images/performance.png)
+<!-- ![w:600px](images/performance.png) -->
 
----
+<!-- --- -->
 
-## Performance
+<!-- ## Performance -->
 
-![w:600px](images/performance.png) ![w:500px](images/chan.png)
+<!-- ![w:600px](images/performance.png) ![w:500px](images/chan.png) -->
 
----
+<!-- --- -->
 
-## Contention
+<!-- ## Contention -->
 
-- Conflicting Data Updates Cause Serialization and Delays
-- Massively parallel execution cannot afford serialization
+<!-- - Conflicting Data Updates Cause Serialization and Delays -->
+<!-- - Massively parallel execution cannot afford serialization -->
 
-![w:1000px](images/contention.png)
+<!-- ![w:1000px](images/contention.png) -->
 
----
+<!-- --- -->
 
-## How to mitigate contention
+<!-- ## How to mitigate contention -->
 
-Contention can be mitigated with:
-- Privatization
-- Transformation of the access pattern
-- Avoid frequent transactions to/from the global main memory
-and read/write the data locally as much as possible before
-updating the global value
-- Make use of registers and shared memory for aggregating partial
-results
-    - Requires storage resources to keep copies of data structures
+<!-- Contention can be mitigated with: -->
+<!-- - Privatization -->
+<!-- - Transformation of the access pattern -->
+<!-- - Avoid frequent transactions to/from the global main memory -->
+<!-- and read/write the data locally as much as possible before -->
+<!-- updating the global value -->
+<!-- - Make use of registers and shared memory for aggregating partial -->
+<!-- results -->
+<!--     - Requires storage resources to keep copies of data structures -->
 
----
+<!-- --- -->
 
-## Count number of 5s
+<!-- ## Count number of 5s -->
 
-<div style="display:flex;gap:1em;align-items:flex-start">
-<div style="flex:2.0;min-width:0">
+<!-- <div style="display:flex;gap:1em;align-items:flex-start"> -->
+<!-- <div style="flex:2.0;min-width:0"> -->
 
-```
-array[N]
-numberOf5 = 0
-for i in [0, N]: 
-    if array[i] == 5:
-        numberOf5 += 1
-return numberOf5
-```
-</div>
-<div style="flex:2.0;min-width:0">
+<!-- ``` -->
+<!-- array[N] -->
+<!-- numberOf5 = 0 -->
+<!-- for i in [0, N]: --> 
+<!--     if array[i] == 5: -->
+<!--         numberOf5 += 1 -->
+<!-- return numberOf5 -->
+<!-- ``` -->
+<!-- </div> -->
+<!-- <div style="flex:2.0;min-width:0"> -->
 
-```
-array[N]
-numberOf5 = 0
-nWorkers = 4
-count5(array, workerId):
-    privateResult = 0
-    beg = workerId * N/nWorkers
-    end = (workerId + 1) * N/nWorkers
-    for i in [beg, end]: 
-        if array[i] == 5:
-            privateResult += 1
-    lock()
-    numberOf5 += privateResult
-    unlock()
-return numberOf5
-```
+<!-- ``` -->
+<!-- array[N] -->
+<!-- numberOf5 = 0 -->
+<!-- nWorkers = 4 -->
+<!-- count5(array, workerId): -->
+<!--     privateResult = 0 -->
+<!--     beg = workerId * N/nWorkers -->
+<!--     end = (workerId + 1) * N/nWorkers -->
+<!--     for i in [beg, end]: --> 
+<!--         if array[i] == 5: -->
+<!--             privateResult += 1 -->
+<!--     lock() -->
+<!--     numberOf5 += privateResult -->
+<!--     unlock() -->
+<!-- return numberOf5 -->
+<!-- ``` -->
 
-</div>
-</div>
+<!-- </div> -->
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Performance with privatization
+<!-- ## Performance with privatization -->
 
-<div style="text-align:center">
+<!-- <div style="text-align:center"> -->
 
-![w:800px](images/better-performance.png)
+<!-- ![w:800px](images/better-performance.png) -->
 
-</div>
+<!-- </div> -->
 
-The T=8 version does not take half of the time w.r.t. T=4 ... Why?
+<!-- The T=8 version does not take half of the time w.r.t. T=4 ... Why? -->
 
----
+<!-- --- -->
 
-## Amdahl's law
+<!-- ## Amdahl's law -->
 
-The maximum theoretical throughput is limited by Amdahl's Law:
-- Every program contains a serial part
-- Only one PU can execute the serial part
-- The speedup using *p* PUs is given by
-$$
-    S(p) = \frac{T_s}{T_p}
-$$
-- If *f* is the fraction of the program that runs serially, the parallel execution time is given by: 
-$$
-    T_p = fT_s + (1 - f)T_p = fT_s + \frac{(1 - f)T_s}{p}
-$$
+<!-- The maximum theoretical throughput is limited by Amdahl's Law: -->
+<!-- - Every program contains a serial part -->
+<!-- - Only one PU can execute the serial part -->
+<!-- - The speedup using *p* PUs is given by -->
+<!-- $$ -->
+<!--     S(p) = \frac{T_s}{T_p} -->
+<!-- $$ -->
+<!-- - If *f* is the fraction of the program that runs serially, the parallel execution time is given by: --> 
+<!-- $$ -->
+<!--     T_p = fT_s + (1 - f)T_p = fT_s + \frac{(1 - f)T_s}{p} -->
+<!-- $$ -->
 
----
+<!-- --- -->
 
-## Amdahl's law speedup
+<!-- ## Amdahl's law speedup -->
 
-The speedup becomes:
-$$
-    S(p, f) = \frac{T_s}{fT_s + \frac{(1 - f)T_s}{p}} = \frac{1}{f + \frac{(1 - f)}{p}}
-$$
+<!-- The speedup becomes: -->
+<!-- $$ -->
+<!--     S(p, f) = \frac{T_s}{fT_s + \frac{(1 - f)T_s}{p}} = \frac{1}{f + \frac{(1 - f)}{p}} -->
+<!-- $$ -->
 
-<div style="text-align:center">
+<!-- <div style="text-align:center"> -->
 
-![w:600px](images/amdahl.png)
+<!-- ![w:600px](images/amdahl.png) -->
 
-</div>
+<!-- </div> -->
 
----
+<!-- --- -->
 
-## Gustafson's law
+<!-- ## Gustafson's law -->
 
-Amdahl’s Law assumes that a problem can be split in a number of independent chunks n that can be processed in parallel and that this number is fixed
-- Many times, the increase of the size of a problem does not correspond to a growth of the sequential part
-    − increasing the size of the problem does not change the time spent executing the sequential part, and only affects the parallel portion
-- Let $f(n)$ be the sequential code fraction of the program
-$$
-    S(n) = f(n) + p(1 - f(n))
-$$
-- $f(n)$ decreases to 0 when n approaches infinity.
-- The maximum speedup is then given by:
-It's still worth to learn parallel computing: computations involving arbitrarily large data sets can be efficiently parallelized!
-$$
-    S_{max} = \lim_{n \to \infty} S(n) = p
-$$
+<!-- Amdahl’s Law assumes that a problem can be split in a number of independent chunks n that can be processed in parallel and that this number is fixed -->
+<!-- - Many times, the increase of the size of a problem does not correspond to a growth of the sequential part -->
+<!--     − increasing the size of the problem does not change the time spent executing the sequential part, and only affects the parallel portion -->
+<!-- - Let $f(n)$ be the sequential code fraction of the program -->
+<!-- $$ -->
+<!--     S(n) = f(n) + p(1 - f(n)) -->
+<!-- $$ -->
+<!-- - $f(n)$ decreases to 0 when n approaches infinity. -->
+<!-- - The maximum speedup is then given by: -->
+<!-- It's still worth to learn parallel computing: computations involving arbitrarily large data sets can be efficiently parallelized! -->
+<!-- $$ -->
+<!--     S_{max} = \lim_{n \to \infty} S(n) = p -->
+<!-- $$ -->
 
 ---
 
@@ -1501,9 +1501,9 @@ Cache data in shared memory
 ```cpp
 __global__ void stencil_1d(const int *in, int *out, int n) {
     __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
-    auto g_index = threadIdx.x + blockIdx.x * blockDim.x;
+    int g_index = threadIdx.x + blockIdx.x * blockDim.x;
     if (g_index < n) {
-        auto s_index = threadIdx.x + RADIUS;
+        int s_index = threadIdx.x + RADIUS;
 
         // Read input elements into shared memory
         temp[s_index] = in[g_index];
@@ -1556,9 +1556,9 @@ All threads must reach the barrier
 ```cpp
 __global__ void stencil_1d(const int *in, int *out, int n) {
     __shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
-    auto g_index = threadIdx.x + blockIdx.x * blockDim.x;
+    int g_index = threadIdx.x + blockIdx.x * blockDim.x;
     if (g_index < n) {
-        auto s_index = threadIdx.x + RADIUS;
+        int s_index = threadIdx.x + RADIUS;
 
         // Read input elements into shared memory
         temp[s_index] = in[g_index];
